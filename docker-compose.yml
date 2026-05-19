@@ -1,0 +1,194 @@
+services:
+  env-checker:
+    image: alpine
+    container_name: env-checker
+    volumes:
+      - ./.env:/.env
+      - ./check_env.sh:/check_env.sh
+    entrypoint: ["/bin/sh", "/check_env.sh"]
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    depends_on:
+      env-checker:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      # Using :? ensures the build fails if the key is missing from .env
+      JWT_SECRET: ${JWT_SECRET:?err}
+      JWT_CHALLENGE_SECRET: ${JWT_CHALLENGE_SECRET:?err}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?err}
+      FRONTEND_URL: ${FRONTEND_URL:-https://localhost:8443}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?err}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?err}
+      FORTYTWO_CLIENT_ID: ${FORTYTWO_CLIENT_ID:?err}
+      FORTYTWO_CLIENT_SECRET: ${FORTYTWO_CLIENT_SECRET:?err}
+    volumes:
+      - auth-db-data:/app/db
+      - picture-db-data:/app/picture
+    networks:
+      - transcendence_net
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      env-checker:
+        condition: service_completed_successfully
+      auth-service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      USER_SERVICE_HOST: 0.0.0.0
+      DB_USER_SERVICE_PATH: /app/db/users.sqlite
+      PICTURE_PATH: /app/picture
+    volumes:
+      - user-db-data:/app/db
+      - picture-db-data:/app/picture
+    networks:
+      - transcendence_net
+    restart: unless-stopped
+
+  matchmaking-service:
+    build:
+      context: ./matchmaking-service
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      env-checker:
+        condition: service_completed_successfully
+      auth-service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      SERVICE_TOKEN: ${SERVICE_TOKEN:?err}
+    volumes:
+      - matchmaking-db-data:/app/db
+    networks:
+      - transcendence_net
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      env-checker:
+        condition: service_completed_successfully
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      matchmaking-service:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST_IP: ${HOST_IP:?err}
+      JWT_SECRET: ${JWT_SECRET:?err}
+    ports:
+      - "3000:3000"
+    networks:
+      - transcendence_net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      env-checker:
+        condition: service_completed_successfully
+      gateway:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      HOST_IP: ${HOST_IP:?err}
+      VITE_API_URL: ${VITE_API_URL:-}
+    networks:
+      - transcendence_net
+
+  chat-service:
+    build:
+      context: ./chat-service
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      env-checker:
+        condition: service_completed_successfully
+      gateway:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?err}
+    volumes:
+      - chat-db-data:/app/database
+    networks:
+      - transcendence_net
+    restart: unless-stopped
+
+  game-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      env-checker:
+        condition: service_completed_successfully
+      gateway:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?err}
+    volumes:
+      - ./server/public:/app/public
+    networks:
+      - transcendence_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    depends_on:
+      env-checker:
+        condition: service_completed_successfully
+      gateway:
+        condition: service_started
+      frontend:
+        condition: service_started
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - picture-db-data:/var/www/picture
+    ports:
+      - "8443:443"
+      - "8080:80"
+    networks:
+      - transcendence_net
+    restart: unless-stopped
+
+networks:
+  transcendence_net:
+    driver: bridge
+
+volumes:
+  auth-db-data:
+  user-db-data:
+  chat-db-data:
+  matchmaking-db-data:
+  picture-db-data:

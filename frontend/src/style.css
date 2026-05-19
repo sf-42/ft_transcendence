@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+	--font-jersey: "Jersey 10", sans-serif;
+	/* --font-doto: "Doto", sans-serif; */
+	/* --font-code: "Source Code Pro", monospace; */
+	--text-shadow-title: 7px 7px;
+	--text-shadow-subtitle: 2px 2px;
+	--color-gold: #d4af37;
+	--color-silver: #c4c4c4;
+	--color-bronze: #e4953c;
+
+	--animate-zoomin: zoom-in 0.5s ease-in-out;
+	--animate-pulse-500: pulse 0.5s ease-in-out infinite;
+	--animate-pulse-200: pulse 0.2s ease-in-out infinite;
+	--animate-pulse-100: pulse 0.1s ease-in-out infinite;
+}
+
+@layer utilities {
+	.font-doto {
+		font-family: "Doto", sans-serif;
+		font-optical-sizing: auto;
+		font-weight: 400;
+		font-style: normal;
+		font-variation-settings:
+			"ROND" 0;
+	}
+
+	.font-code {
+		font-family: "Source Code Pro", monospace;
+		font-optical-sizing: auto;
+		font-weight: 400;
+		font-style: normal;
+	}
+
+	.scrollbar-hide {
+          /* Firefox */
+          scrollbar-width: none;
+          /* Safari and Chrome */
+          &::-webkit-scrollbar {
+            display: none
+          }
+        }
+}
+
+@keyframes zoom-in {
+	0% {
+		opacity: 0;
+		transform: scale3d(0.3, 0.3, 0.3)
+	}
+
+	80% {
+		opacity: 0.8;
+		transform: scale3d(1.1, 1.1, 1.1)
+	}
+
+	100% {
+		opacity: 1;
+		transform: scale3d(1, 1, 1)
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.2;
+	}
+}
+
+/* @animation {
+  zoomin: zoom-in 1s ease-in-out infinite;
+} */
+
+/* @extend: {
+  @keyframes: {
+    'zoom-in': {
+      '0%': { opacity: 0, transform: 'scale3d(0.3, 0.3, 0.3)' },
+      '80%': { opacity: 0.8, transform: 'scale3d(1.1, 1.1, 1.1)' },
+      '100%': { opacity: 1, transform: 'scale3d(1, 1, 1)' }
+    }
+  }
+  @animation: {
+    zoomin: 'zoom-in 1s ease-in-out infinite'
+  }
+} */
+
+#renderCanvas {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: -1;
+	/* touch-action: none; */
+	pointer-events: auto;
+}
+
+#root {
+	position: relative;
+	z-index: 1;
+	min-height: 100vh;
+	overflow-y: auto;
+}
+
+html, body {
+	/* overflow: hidden; */
+	overflow-y: auto;
+	overflow-x: hidden;
+	width: 100%;
+	/* height: 100%; */
+	height: auto;
+	margin: 0%;
+	padding: 0%;
+}
+
+.fade-out-title {
+	opacity: 0 !important;
+	transition: opacity 0.3s ease-out !important;
+}

@@ -1,0 +1,34 @@
+{
+  "name": "matchmaking-service",
+  "version": "1.0.0",
+  "description": "Matchmaking microservice for Transcendence project",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "postinstall": "echo skip prisma"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/http-proxy": "^9.5.0",
+    "@types/node-fetch": "^2.6.13",
+    "dotenv": "^16.6.1",
+    "fastify": "^4.29.1",
+    "node-fetch": "^3.3.2",
+    "pino-pretty": "^13.1.3",
+    "sqlite": "^4.2.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.23",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
